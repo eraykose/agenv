@@ -84,7 +84,7 @@ people need more than one (personal + team + public).
 ### Commands
 
 ```
-agreg add <source> [--ref <ref>] [--prefix <p>] [--only <tools>]   clone + validate + link
+agreg add <source> [--ref <ref>] [--only <tools>]                  clone + validate + link
 agreg remove <registry> [--purge]                                  unlink + delete clone
 agreg update [registry...] [--check] [--dry-run]                   fetch, show changes, fast-forward, relink, refresh Codex
 agreg list [--json]                                                registries and their roles
@@ -98,6 +98,7 @@ agreg propose -m <msg> [--registry <r>] [--branch <b>]             branch, commi
 agreg new role <name> | skill <role>/<name> [--registry <r>]       scaffold inside a registry
 agreg build [registry] [--check]                                   regenerate per-tool manifests
 agreg init [dir]                                                   scaffold a new registry repo
+agreg uninstall [--force]                                          unlink everything, delete ~/.agreg
 ```
 
 `<source>` is `owner/repo`, an HTTPS or SSH git URL, or a local path. Private repos use
@@ -128,11 +129,12 @@ therefore do not need to ship a meta role, and upgrading agreg upgrades the skil
 ### Naming across registries
 
 Codex namespaces plugins by marketplace, so `coding@acme` and `coding@ek-skills`
-coexist. Claude's skills dir and Gemini's extension names are flat. Rule: a role's
-tool-visible name is `<role>`; if two configured registries declare the same role,
-`add` refuses and offers `--prefix <p>`, which links that registry's roles as
-`<p>-<role>` and records the prefix in config so ids stay stable afterwards. (The
-Homebrew rule: names are unique or you qualify them.)
+coexist. Claude's skills dir and Gemini's extension names are flat, and Gemini takes
+the name from the committed manifest, so a per-machine prefix cannot fix a clash there.
+Rule for v1: a role's tool-visible name is `<role>`, and role names must be unique
+across the registries a machine configures; `add` refuses a clash and names it. The
+name `agreg` is reserved for the built-in role. (The Homebrew rule: names are unique
+or you qualify them; qualification is `<registry>/<role>` in the CLI.)
 
 ### Change flow
 
@@ -183,8 +185,9 @@ re-verify.
   hooks/MCP bundling and the vendors' own enable/disable and cost reporting (ADR 0003).
 - **Generate adapters locally instead of committing them.** Rejected: Cowork and vendor
   marketplaces read the repo by URL and need the files present (ADR 0005).
-- **Always prefix role names by registry.** Rejected for v1: ugly for the common
-  single-registry case; conflicts are rare and explicit (see Naming).
+- **Prefix role names by registry** (always, or on demand with `--prefix`). Rejected
+  for v1: ugly for the common single-registry case, and Gemini reads the extension name
+  from the committed manifest, so a local prefix would not apply there (see Naming).
 
 ## Migration
 

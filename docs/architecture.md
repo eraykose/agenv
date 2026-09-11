@@ -6,7 +6,9 @@ Read `rfcs/0001-registry-system.md` for the why. This file is the how.
 
 ```
 bin/agreg.js            argv parsing and dispatch only
-lib/commands/*.js       one file per command; orchestrates registries x targets; all user-facing output
+lib/commands/*.js       one file per command (add, remove, update, list, use, status, sync, doctor,
+                        path, edit, propose, new, build, init, uninstall); shared.js holds the
+                        first-time defaults, registry inference, and the security preview
 lib/targets/*.js        one adapter per tool (claude, codex, gemini) behind one interface
 lib/registries.js       the set of configured registries (+ the built-in one) from ~/.agreg/config.json
 lib/registry.js         one registry on disk: roles, manifests, skills, agents
@@ -44,7 +46,10 @@ enabledState(link, dir) -> {user, project, effective}
 ```
 
 A **link** is `{ registry, role, name, path }` where `name` is the tool-visible name
-(role, or `<prefix>-<role>`, see ADR 0008) and `path` the role folder in the clone.
+(the role name, unique across registries per ADR 0008) and `path` the role folder in
+the clone. Links are recomputed on every call: compare them by `name`, never by identity.
+Optional adapter methods: `unregister(registry)` (Codex marketplace) and `forget(links)`
+(Claude user-scope keys), used by `remove --purge` and `uninstall`.
 
 ## Data flow of the main commands
 
@@ -58,7 +63,11 @@ A **link** is `{ registry, role, name, path }` where `name` is the tool-visible 
 - `sync`: `meta.ensure()`, then for each installed target: link missing, refresh; a repair
   command that is safe to run any time.
 - `doctor`: registry checks (`build --check`, frontmatter, names) + tool validators +
-  link health; exit 1 on errors.
+  link health; exit 1 on errors. With a path argument it checks only that registry (CI).
+- `propose`: registry = `--registry`, else the registry cwd is inside (configured clone
+  or a source checkout), else the only configured one. Branch, commit all, push, `gh pr create`.
+- `uninstall`: everything `remove --purge` does, for every registry and the built-in
+  role, then deletes `~/.agreg`.
 
 ## Verified facts
 
