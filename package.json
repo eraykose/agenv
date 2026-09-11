@@ -1,0 +1,23 @@
+{
+  "name": "agreg",
+  "version": "0.3.0",
+  "description": "Agent registry: link git repos of role-scoped plugins (skills, MCP servers, hooks, commands) into Claude Code, Codex, and Gemini CLI, one role at a time",
+  "license": "MIT",
+  "author": {
+    "name": "Eray Kose",
+    "email": "eraykose@gmail.com"
+  },
+  "repository": "https://github.com/eraykose/agreg",
+  "keywords": ["agent-skills", "agent-plugins", "claude-code", "codex", "gemini-cli", "mcp", "registry"],
+  "bin": {
+    "agreg": "./bin/agreg.js"
+  },
+  "files": ["bin", "lib", "assets", "docs", "AGENTS.md", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test",
+    "doctor": "node bin/agreg.js doctor"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
