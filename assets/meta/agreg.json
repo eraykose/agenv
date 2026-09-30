@@ -1,5 +1,0 @@
-{
-  "name": "agreg",
-  "description": "agreg's built-in role: how an agent inspects, edits, and proposes changes to the registries on this machine",
-  "owner": { "name": "agreg" }
-}

@@ -3,3 +3,6 @@
 node_modules/
 .claude/settings.local.json
 .codex/config.toml
+
+# private planning notes (vision, ideas) - not part of the published docs
+.doc/

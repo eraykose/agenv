@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "agenv",
+  "version": "0.0.0",
+  "description": "Operate agenv: list, edit, validate, and propose changes to the role registries on this machine"
+}

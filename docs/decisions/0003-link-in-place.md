@@ -11,7 +11,7 @@ skills with MCP servers, hooks, commands, and agents.
 ## Decision
 Use the native plugin systems, and attach the clone in place wherever the vendor allows:
 Claude Code's skills directory (symlink), Gemini's `extensions link`, Codex's local
-marketplace (a copy Codex maintains; agreg refreshes it).
+marketplace (a copy Codex maintains; agenv refreshes it).
 
 ## Consequences
 - Hooks, MCP servers, commands, and agents come along; vendors' enable/disable and

@@ -13,33 +13,33 @@ test('add clones, links every role plus the built-in one, and switches roles off
   assert.match(out, /team -> /);
   assert.match(out, /coding\s+skills: coding-guide/);
 
-  const cfg = sb.readJson(path.join(sb.agregHome, 'config.json'));
+  const cfg = sb.readJson(path.join(sb.agenvHome, 'config.json'));
   assert.equal(cfg.registries.team.url, bare);
-  assert.equal(cfg.registries.team.commit, sb.git('rev-parse HEAD', path.join(sb.agregHome, 'registries', 'team')));
+  assert.equal(cfg.registries.team.commit, sb.git('rev-parse HEAD', path.join(sb.agenvHome, 'registries', 'team')));
 
   // Claude: symlinks for roles and the built-in role, manifests carry the defaults.
-  for (const [name, target] of [['coding', 'registries/team/plugins/coding'], ['design', 'registries/team/plugins/design'], ['agreg', 'meta/plugins/agreg']]) {
-    assert.equal(fs.readlinkSync(path.join(sb.home, '.claude', 'skills', name)), path.join(sb.agregHome, target));
+  for (const [name, target] of [['coding', 'registries/team/plugins/coding'], ['design', 'registries/team/plugins/design'], ['agenv', 'meta/plugins/agenv']]) {
+    assert.equal(fs.readlinkSync(path.join(sb.home, '.claude', 'skills', name)), path.join(sb.agenvHome, target));
   }
-  assert.equal(sb.readJson(path.join(sb.agregHome, 'meta/plugins/agreg/.claude-plugin/plugin.json')).defaultEnabled, undefined, 'built-in role stays on');
-  assert.equal(sb.readJson(path.join(sb.agregHome, 'registries/team/plugins/coding/.claude-plugin/plugin.json')).defaultEnabled, false);
+  assert.equal(sb.readJson(path.join(sb.agenvHome, 'meta/plugins/agenv/.claude-plugin/plugin.json')).defaultEnabled, undefined, 'built-in role stays on');
+  assert.equal(sb.readJson(path.join(sb.agenvHome, 'registries/team/plugins/coding/.claude-plugin/plugin.json')).defaultEnabled, false);
 
   // Codex: one marketplace per registry (name from the catalogue), roles added, non-builtin off.
   const codexCfg = fs.readFileSync(path.join(sb.home, '.codex', 'config.toml'), 'utf8');
   assert.match(codexCfg, /^model = "gpt-5"/);
   assert.match(codexCfg, /\[marketplaces\.team\]/);
-  assert.match(codexCfg, /\[marketplaces\.agreg\]/);
+  assert.match(codexCfg, /\[marketplaces\.agenv\]/);
   assert.match(codexCfg, /\[plugins\."coding@team"\]\nenabled = false/);
-  assert.match(codexCfg, /\[plugins\."agreg@agreg"\]\nenabled = true/);
+  assert.match(codexCfg, /\[plugins\."agenv@agenv"\]\nenabled = true/);
 
   // Gemini: linked, user-scope off for roles, on for the built-in.
   const calls = sb.calls();
-  assert.ok(calls.includes(`gemini extensions link ${path.join(sb.agregHome, 'registries/team/plugins/coding')} --consent`));
+  assert.ok(calls.includes(`gemini extensions link ${path.join(sb.agenvHome, 'registries/team/plugins/coding')} --consent`));
   assert.ok(calls.includes('gemini extensions disable --scope user coding'));
-  assert.ok(calls.includes('gemini extensions enable --scope user agreg'));
+  assert.ok(calls.includes('gemini extensions enable --scope user agenv'));
 
   const list = JSON.parse(sb.run(['list', '--json']));
-  assert.deepEqual(list.map((r) => r.name), ['agreg', 'team']);
+  assert.deepEqual(list.map((r) => r.name), ['agenv', 'team']);
   assert.deepEqual(list[1].roles.map((r) => r.name), ['coding', 'design']);
 });
 
@@ -51,10 +51,10 @@ test('add refuses a duplicate registry name or a colliding role name, leaving no
   assert.throws(() => sb.run(['add', a.bare]), /already configured/);
   const b = sb.makeRegistry('beta', ['coding']);
   assert.throws(() => sb.run(['add', b.bare]), /Role name\(s\) already used by another registry: coding/);
-  assert.deepEqual(Object.keys(sb.readJson(path.join(sb.agregHome, 'config.json')).registries), ['alpha']);
-  assert.deepEqual(fs.readdirSync(path.join(sb.agregHome, 'registries')), ['alpha'], 'no temp clone left');
-  const c = sb.makeRegistry('gamma', ['agreg']);
-  assert.throws(() => sb.run(['add', c.bare]), /already used by another registry: agreg/);
+  assert.deepEqual(Object.keys(sb.readJson(path.join(sb.agenvHome, 'config.json')).registries), ['alpha']);
+  assert.deepEqual(fs.readdirSync(path.join(sb.agenvHome, 'registries')), ['alpha'], 'no temp clone left');
+  const c = sb.makeRegistry('gamma', ['agenv']);
+  assert.throws(() => sb.run(['add', c.bare]), /already used by another registry: agenv/);
   assert.throws(() => sb.run(['add', path.join(sb.base, 'nowhere.git')]), /Could not clone/);
 });
 
@@ -68,11 +68,11 @@ test('use writes explicit on/off for every tool at folder scope, then --global a
   assert.match(out, /on:\s+coding\n/);
   assert.match(out, /off:\s+design, marketing/);
   const claude = sb.readJson(path.join(proj, '.claude', 'settings.local.json'));
-  assert.deepEqual(claude.enabledPlugins, { 'agreg@skills-dir': true, 'coding@skills-dir': true, 'design@skills-dir': false, 'marketing@skills-dir': false });
+  assert.deepEqual(claude.enabledPlugins, { 'agenv@skills-dir': true, 'coding@skills-dir': true, 'design@skills-dir': false, 'marketing@skills-dir': false });
   const codex = fs.readFileSync(path.join(proj, '.codex', 'config.toml'), 'utf8');
   assert.match(codex, /\[plugins\."coding@team"\]\nenabled = true/);
   assert.match(codex, /\[plugins\."design@team"\]\nenabled = false/);
-  assert.match(codex, /\[plugins\."agreg@agreg"\]\nenabled = true/);
+  assert.match(codex, /\[plugins\."agenv@agenv"\]\nenabled = true/);
   assert.match(out, /Codex reads a folder's/);
   assert.ok(sb.calls().includes('gemini extensions enable --scope workspace coding'));
   assert.ok(sb.calls().includes('gemini extensions disable --scope workspace design'));
@@ -88,7 +88,7 @@ test('use writes explicit on/off for every tool at folder scope, then --global a
   assert.equal(user.enabledPlugins['marketing@skills-dir'], true);
   assert.equal(user.enabledPlugins['coding@skills-dir'], false);
   assert.match(fs.readFileSync(path.join(sb.home, '.codex', 'config.toml'), 'utf8'), /\[plugins\."marketing@team"\]\nenabled = true/);
-  assert.throws(() => sb.run(['use', '--roles', 'agreg', '--dir', proj]), /always on/);
+  assert.throws(() => sb.run(['use', '--roles', 'agenv', '--dir', proj]), /always on/);
   assert.throws(() => sb.run(['use', '--roles', 'nope', '--dir', proj]), /Unknown role "nope"/);
 
   const status = JSON.parse(sb.run(['status', '--dir', proj, '--json', '--cost']));
@@ -141,10 +141,10 @@ test('update shows what changed, fast-forwards, links new roles off, and refuses
 
   const out = sb.run(['update']);
   assert.match(out, /Tighten coding, add design/);
-  assert.match(out, /design off until `agreg use`/);
-  const clone = path.join(sb.agregHome, 'registries', 'team');
+  assert.match(out, /design off until `agenv use`/);
+  const clone = path.join(sb.agenvHome, 'registries', 'team');
   assert.equal(sb.git('rev-parse HEAD', clone), sb.git('rev-parse HEAD', work));
-  assert.equal(sb.readJson(path.join(sb.agregHome, 'config.json')).registries.team.commit, sb.git('rev-parse HEAD', work));
+  assert.equal(sb.readJson(path.join(sb.agenvHome, 'config.json')).registries.team.commit, sb.git('rev-parse HEAD', work));
   assert.equal(fs.readlinkSync(path.join(sb.home, '.claude', 'skills', 'design')), path.join(clone, 'plugins', 'design'));
   const codexCfg = fs.readFileSync(path.join(sb.home, '.codex', 'config.toml'), 'utf8');
   assert.match(codexCfg, /\[plugins\."design@team"\]\nenabled = false/);
@@ -161,7 +161,7 @@ test('edit resolves paths, propose branches + pushes + opens a PR, remove refuse
   t.after(sb.cleanup);
   const { bare } = sb.makeRegistry('team', ['coding']);
   sb.run(['add', bare]);
-  const clone = path.join(sb.agregHome, 'registries', 'team');
+  const clone = path.join(sb.agenvHome, 'registries', 'team');
   assert.equal(sb.run(['edit', 'coding', '--print']).trim(), path.join(clone, 'plugins', 'coding'));
   const skill = sb.run(['edit', 'coding/coding-guide']).trim();
   assert.equal(skill, path.join(clone, 'plugins', 'coding', 'skills', 'coding-guide', 'SKILL.md'));
@@ -175,16 +175,16 @@ test('edit resolves paths, propose branches + pushes + opens a PR, remove refuse
   assert.throws(() => sb.run(['remove', 'team']), /uncommitted changes/);
   const out = sb.run(['propose', '-m', 'Tighten the coding guide']);
   assert.match(out, /After it merges/);
-  assert.equal(sb.git('rev-parse --abbrev-ref HEAD', clone), 'agreg/tighten-the-coding-guide');
-  assert.ok(sb.git('branch --list', bare).includes('agreg/tighten-the-coding-guide'), 'branch pushed to the remote');
+  assert.equal(sb.git('rev-parse --abbrev-ref HEAD', clone), 'agenv/tighten-the-coding-guide');
+  assert.ok(sb.git('branch --list', bare).includes('agenv/tighten-the-coding-guide'), 'branch pushed to the remote');
   assert.ok(sb.calls().some((c) => c.startsWith('gh pr create --title Tighten the coding guide')));
   assert.equal(sb.git('status --porcelain', clone), '');
 
   sb.run(['remove', 'team', '--purge']);
   assert.ok(!fs.existsSync(clone));
   assert.ok(!fs.existsSync(path.join(sb.home, '.claude', 'skills', 'coding')));
-  assert.ok(fs.existsSync(path.join(sb.home, '.claude', 'skills', 'agreg')), 'built-in link stays');
-  assert.deepEqual(sb.readJson(path.join(sb.agregHome, 'config.json')).registries, {});
+  assert.ok(fs.existsSync(path.join(sb.home, '.claude', 'skills', 'agenv')), 'built-in link stays');
+  assert.deepEqual(sb.readJson(path.join(sb.agenvHome, 'config.json')).registries, {});
   const codexCfg = fs.readFileSync(path.join(sb.home, '.codex', 'config.toml'), 'utf8');
   assert.ok(!codexCfg.includes('marketplaces.team'));
   assert.ok(!codexCfg.includes('coding@team'));
@@ -215,17 +215,17 @@ test('uninstall unlinks everything including the built-in role and deletes the h
   t.after(sb.cleanup);
   sb.run(['add', sb.makeRegistry('team', ['coding']).bare]);
   sb.run(['use', '--roles', 'coding', '--global']);
-  const clone = path.join(sb.agregHome, 'registries', 'team');
+  const clone = path.join(sb.agenvHome, 'registries', 'team');
   fs.writeFileSync(path.join(clone, 'plugins/coding/skills/coding-guide/SKILL.md'), '---\nname: coding-guide\ndescription: local\n---\n');
   assert.throws(() => sb.run(['uninstall']), /Uncommitted changes/);
   sb.run(['uninstall', '--force']);
-  assert.ok(!fs.existsSync(sb.agregHome));
+  assert.ok(!fs.existsSync(sb.agenvHome));
   assert.deepEqual(fs.readdirSync(path.join(sb.home, '.claude', 'skills')), []);
   const codexCfg = fs.readFileSync(path.join(sb.home, '.codex', 'config.toml'), 'utf8');
   assert.equal(codexCfg.trim(), 'model = "gpt-5"', 'Codex config back to what it was');
   assert.deepEqual(sb.readJson(path.join(sb.home, '.claude', 'settings.json')).enabledPlugins, {});
-  assert.ok(sb.calls().includes('gemini extensions uninstall agreg'));
-  assert.ok(sb.calls().includes('codex plugin marketplace remove agreg'));
+  assert.ok(sb.calls().includes('gemini extensions uninstall agenv'));
+  assert.ok(sb.calls().includes('codex plugin marketplace remove agenv'));
 });
 
 test('propose from inside an unconfigured source checkout targets that checkout and says so', (t) => {

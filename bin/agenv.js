@@ -33,13 +33,13 @@ function parse(argv) {
   return { flags, positional };
 }
 
-const HELP = `agreg ${pkg.version} - agent registry: git repos of roles, linked into every agent CLI, one role at a time
+const HELP = `agenv ${pkg.version} - nvm for your agents: one setup, every tool, the right role in every folder
 
-Usage: agreg <command> [options]
+Usage: agenv <command> [options]
 
 Registries
   add <owner/repo | git URL | path> [--ref <ref>] [--only <tools>]
-                              Clone a registry under ~/.agreg and link its roles (off by default)
+                              Clone a registry under ~/.agenv and link its roles (off by default)
   remove <registry> [--purge] [--force]
                               Unlink and delete a registry (--purge: also marketplace + user settings)
   update [registry...] [--check] [--json] [--dry-run]
@@ -56,10 +56,10 @@ Maintenance
   sync [--only <tools>] [--dry-run]
                               Make every tool match config (relink, refresh); safe any time
   doctor [registry|path] [--json]
-                              Validate registries and links; exit 1 on errors (CI: agreg doctor .)
+                              Validate registries and links; exit 1 on errors (CI: agenv doctor .)
   path [registry]             Print a clone's path
   uninstall [--force] [--dry-run]
-                              Unlink everything (built-in role included) and delete ~/.agreg
+                              Unlink everything (built-in role included) and delete ~/.agenv
 
 Editing a registry
   edit <role>[/<skill>] [--print]
@@ -73,13 +73,13 @@ Editing a registry
                               Scaffold a new registry repo
 
 Tools for --only: claude, codex, gemini. Roles may be written <registry>/<role>.
-AGREG_HOME overrides ~/.agreg.
+AGENV_HOME overrides ~/.agenv.
 `;
 
 async function main() {
   const { flags, positional } = parse(process.argv.slice(2));
   const command = positional[0];
-  if (flags.version) return console.log(`agreg ${pkg.version}`);
+  if (flags.version) return console.log(`agenv ${pkg.version}`);
   if (flags.help || command === 'help' || command === undefined) return console.log(HELP);
   const dryRun = Boolean(flags['dry-run']);
   const all = Boolean(flags.all || flags.yes);

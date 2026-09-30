@@ -9,7 +9,7 @@ MCP tools, or as shell commands plus a small skill that explains them.
 
 ## Decision
 CLI. Every command that an agent might parse takes `--json`. A built-in role ships one
-skill (~100 tokens always-on) that says how to call `agreg`.
+skill (~100 tokens always-on) that says how to call `agenv`.
 
 ## Consequences
 - No MCP schemas in every prompt; the context-cost goal of the whole tool is respected.

@@ -11,7 +11,7 @@ test('init scaffolds a registry that build --check and doctor accept', (t) => {
   const dir = path.join(sb.base, 'reg');
   const out = sb.run(['init', dir, '--name', 'acme-agents', '--owner', 'Acme']);
   assert.match(out, /Created registry "acme-agents"/);
-  for (const f of ['agreg.json', 'plugins/example/plugin.json', 'plugins/example/.claude-plugin/plugin.json', 'plugins/example/gemini-extension.json', '.claude-plugin/marketplace.json', '.agents/plugins/marketplace.json', '.github/workflows/ci.yml']) {
+  for (const f of ['agenv.json', 'plugins/example/plugin.json', 'plugins/example/.claude-plugin/plugin.json', 'plugins/example/gemini-extension.json', '.claude-plugin/marketplace.json', '.agents/plugins/marketplace.json', '.github/workflows/ci.yml']) {
     assert.ok(fs.existsSync(path.join(dir, f)), f);
   }
   const claudeMp = sb.readJson(path.join(dir, '.claude-plugin', 'marketplace.json'));
@@ -23,7 +23,7 @@ test('init scaffolds a registry that build --check and doctor accept', (t) => {
   assert.match(sb.run(['build', dir, '--check']), /in sync/);
   assert.match(sb.run(['doctor', dir]), /0 error\(s\)/);
   assert.equal(sb.git('symbolic-ref --short HEAD', dir), 'main');
-  assert.throws(() => sb.run(['init', dir]), /already has agreg.json/);
+  assert.throws(() => sb.run(['init', dir]), /already has agenv.json/);
   assert.throws(() => sb.run(['init', path.join(sb.base, 'Bad Name')]), /kebab-case/);
 });
 

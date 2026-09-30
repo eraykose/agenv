@@ -1,4 +1,4 @@
-# RFC 0001: agreg as a registry system
+# RFC 0001: agenv as a registry system (originally named agreg)
 
 - Status: accepted
 - Date: 2026-09-12
@@ -6,10 +6,10 @@
 
 ## Summary
 
-Turn `agreg` into an installable tool (`npm i -g agreg`) that manages one or more
+Turn `agenv` into an installable tool (`npm i -g agenv`) that manages one or more
 **registries**: git repositories, public or private, that contain **roles**. A role is
-a self-contained plugin (skills, MCP servers, hooks, commands, agent personas). `agreg`
-clones registries under `~/.agreg/`, links every role into each agent CLI's native plugin
+a self-contained plugin (skills, MCP servers, hooks, commands, agent personas). `agenv`
+clones registries under `~/.agenv/`, links every role into each agent CLI's native plugin
 mechanism (Claude Code, Codex, Gemini CLI), lets you switch roles on per folder, keeps
 the clones up to date, and turns "edit a skill and get it reviewed" into first-class
 commands so an agent never needs to know where the repo lives.
@@ -28,21 +28,21 @@ people need more than one (personal + team + public).
 ## Goals
 
 1. **Install the tool once**, from npm. No clone, no `npm link`.
-2. **Registries are plain git repos.** `agreg add owner/repo` works for private repos
+2. **Registries are plain git repos.** `agenv add owner/repo` works for private repos
    using the credentials git already has. Nothing is hosted by us.
 3. **Several registries per machine**, composed into one set of roles.
 4. **Reviewable change.** Editing a skill, proposing it as a PR, and pulling the merge are
    commands. Every change is a git commit someone can read.
 5. **Agents drive it through the CLI.** A built-in role teaches any agent to call
-   `agreg`; every command has `--json`.
-6. **Nothing role-specific in context until asked.** Roles are off until `agreg use`.
+   `agenv`; every command has `--json`.
+6. **Nothing role-specific in context until asked.** Roles are off until `agenv use`.
 
 ## Non-goals
 
 - Discovery / a public index. Vercel's `skills` (31k stars, skills.sh) owns that; a
   registry URL is enough for the audiences above.
 - A hosted service, accounts, or telemetry.
-- Replacing the vendors' plugin formats. agreg generates them; it does not define a fifth.
+- Replacing the vendors' plugin formats. agenv generates them; it does not define a fifth.
 - Windows support in v1 (links use junctions but nothing is tested there).
 
 ## Prior art
@@ -62,7 +62,7 @@ people need more than one (personal + team + public).
 - **Registry**: a git repo whose root has `plugins/<role>/` folders plus the catalogue
   files the vendors expect (`.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`).
   Its **name** is the `name` declared in those catalogues; Codex uses that name in
-  plugin ids (`coding@ek-skills`), so agreg uses the same one everywhere.
+  plugin ids (`coding@ek-skills`), so agenv uses the same one everywhere.
 - **Role**: `plugins/<role>/` with a portable `plugin.json` (Agent Plugins 1.0), optional
   `mcp.json`, `skills/`, `commands/`, `hooks/`, `agents/`, `scripts/`, and generated
   per-tool manifests. Unchanged from today; see `docs/registry-format.md`.
@@ -75,30 +75,30 @@ people need more than one (personal + team + public).
 ### Home layout
 
 ```
-~/.agreg/                       ($AGREG_HOME)
+~/.agenv/                       ($AGENV_HOME)
   config.json                   registries, refs, pinned commits, prefixes
   registries/<name>/            git clones - the source of truth on this machine
-  meta/                         the built-in "agreg" role, regenerated from the package
+  meta/                         the built-in "agenv" role, regenerated from the package
 ```
 
 ### Commands
 
 ```
-agreg add <source> [--ref <ref>] [--only <tools>]                  clone + validate + link
-agreg remove <registry> [--purge]                                  unlink + delete clone
-agreg update [registry...] [--check] [--dry-run]                   fetch, show changes, fast-forward, relink, refresh Codex
-agreg list [--json]                                                registries and their roles
-agreg use [--roles a,b | --all] [--dir] [--global] [--only]        roles active here (all tools)
-agreg status [--dir] [--cost] [--json]                             links, per-role state, active here
-agreg sync [--dry-run]                                             make every tool match config (idempotent repair)
-agreg doctor [registry] [--json]                                   validate registries, links, tools
-agreg path [registry]                                              print the clone path
-agreg edit <role>/<skill> | <role>                                 open in $EDITOR, or print the path
-agreg propose -m <msg> [--registry <r>] [--branch <b>]             branch, commit, push, open PR
-agreg new role <name> | skill <role>/<name> [--registry <r>]       scaffold inside a registry
-agreg build [registry] [--check]                                   regenerate per-tool manifests
-agreg init [dir]                                                   scaffold a new registry repo
-agreg uninstall [--force]                                          unlink everything, delete ~/.agreg
+agenv add <source> [--ref <ref>] [--only <tools>]                  clone + validate + link
+agenv remove <registry> [--purge]                                  unlink + delete clone
+agenv update [registry...] [--check] [--dry-run]                   fetch, show changes, fast-forward, relink, refresh Codex
+agenv list [--json]                                                registries and their roles
+agenv use [--roles a,b | --all] [--dir] [--global] [--only]        roles active here (all tools)
+agenv status [--dir] [--cost] [--json]                             links, per-role state, active here
+agenv sync [--dry-run]                                             make every tool match config (idempotent repair)
+agenv doctor [registry] [--json]                                   validate registries, links, tools
+agenv path [registry]                                              print the clone path
+agenv edit <role>/<skill> | <role>                                 open in $EDITOR, or print the path
+agenv propose -m <msg> [--registry <r>] [--branch <b>]             branch, commit, push, open PR
+agenv new role <name> | skill <role>/<name> [--registry <r>]       scaffold inside a registry
+agenv build [registry] [--check]                                   regenerate per-tool manifests
+agenv init [dir]                                                   scaffold a new registry repo
+agenv uninstall [--force]                                          unlink everything, delete ~/.agenv
 ```
 
 `<source>` is `owner/repo`, an HTTPS or SSH git URL, or a local path. Private repos use
@@ -107,15 +107,15 @@ whatever git already has (SSH agent, `gh auth`, keychain).
 ### The built-in role
 
 The package ships `assets/meta/`: one skill that tells an agent how to inspect, edit,
-and propose changes through `agreg` (find the checkout with `agreg path`, never edit
-cached copies, `agreg build` after manifest edits, `agreg doctor`, `agreg propose`).
-On every `add`/`sync`/`update`, agreg regenerates `~/.agreg/meta/` as a tiny registry
-named `agreg` with the single role `agreg`, links it, and keeps it always on. Registries
-therefore do not need to ship a meta role, and upgrading agreg upgrades the skill.
+and propose changes through `agenv` (find the checkout with `agenv path`, never edit
+cached copies, `agenv build` after manifest edits, `agenv doctor`, `agenv propose`).
+On every `add`/`sync`/`update`, agenv regenerates `~/.agenv/meta/` as a tiny registry
+named `agenv` with the single role `agenv`, links it, and keeps it always on. Registries
+therefore do not need to ship a meta role, and upgrading agenv upgrades the skill.
 
 ### Updates and pinning
 
-`config.json` records the ref and the commit each registry is on. `agreg update`:
+`config.json` records the ref and the commit each registry is on. `agenv update`:
 
 1. refuses if the clone has uncommitted changes (tell the user to `propose` or clean up);
 2. fetches, prints `git log --oneline <old>..<new>` and which roles/skills changed;
@@ -133,21 +133,21 @@ coexist. Claude's skills dir and Gemini's extension names are flat, and Gemini t
 the name from the committed manifest, so a per-machine prefix cannot fix a clash there.
 Rule for v1: a role's tool-visible name is `<role>`, and role names must be unique
 across the registries a machine configures; `add` refuses a clash and names it. The
-name `agreg` is reserved for the built-in role. (The Homebrew rule: names are unique
+name `agenv` is reserved for the built-in role. (The Homebrew rule: names are unique
 or you qualify them; qualification is `<registry>/<role>` in the CLI.)
 
 ### Change flow
 
 ```
-agreg edit coding/code-review       # opens the SKILL.md in the clone (Claude/Gemini see it live)
-agreg doctor ek-skills              # validates
-agreg propose -m "Tighten the review checklist"
-                                    # git checkout -b agreg/<slug>, commit, push -u, gh pr create
-agreg update                        # after merge, on every machine
+agenv edit coding/code-review       # opens the SKILL.md in the clone (Claude/Gemini see it live)
+agenv doctor ek-skills              # validates
+agenv propose -m "Tighten the review checklist"
+                                    # git checkout -b agenv/<slug>, commit, push -u, gh pr create
+agenv update                        # after merge, on every machine
 ```
 
 Draft branches are live in Claude Code and Gemini the moment the file is saved, because
-those tools read the clone in place. Codex needs `agreg sync` to re-copy.
+those tools read the clone in place. Codex needs `agenv sync` to re-copy.
 
 ### Security
 
@@ -156,13 +156,13 @@ those tools read the clone in place. Codex needs `agreg sync` to re-copy.
   before fast-forwarding. Snyk's 2026 audit found a third of public skills flawed; the
   answer here is "read the change before it lands", not a scanner.
 - Pinning to a tag or commit is supported for teams that want reproducible machines.
-- agreg never stores credentials; git does the authentication.
+- agenv never stores credentials; git does the authentication.
 
 ### Distribution
 
-- npm: `npm i -g agreg` (zero runtime dependencies, Node >= 20). Every target CLI is
+- npm: `npm i -g agenv` (zero runtime dependencies, Node >= 20). Every target CLI is
   itself an npm package, so Node is already present for this audience.
-- `npx agreg ...` for one-off use and CI (`npx agreg doctor` in a registry's workflow).
+- `npx agenv ...` for one-off use and CI (`npx agenv doctor` in a registry's workflow).
 - A curl installer and a Homebrew formula can wrap the npm install later.
 
 ### AI-native repository
@@ -191,14 +191,14 @@ re-verify.
 
 ## Migration
 
-1. New repo `agreg` (this one) holds the CLI, tests, docs, and the built-in role.
+1. New repo `agenv` (this one) holds the CLI, tests, docs, and the built-in role.
 2. `ek-skills` becomes a pure registry: `plugins/`, catalogues, README, CI running
-   `npx agreg doctor`. Its CLI code is removed.
-3. Machines: `npm i -g agreg && agreg add eraykose/ek-skills`. The old `npm link` install
+   `npx agenv doctor`. Its CLI code is removed.
+3. Machines: `npm i -g agenv && agenv add eraykose/ek-skills`. The old `npm link` install
    is removed with `npm unlink -g ek-skills`.
 
 ## Open questions
 
 - Windows: junctions for Claude, Codex and Gemini paths - untested.
-- Codex per-folder enablement needs the folder trusted in Codex; agreg only warns.
-- Whether `agreg` should offer `discard` (reset a dirty clone). Left to `git` for v1.
+- Codex per-folder enablement needs the folder trusted in Codex; agenv only warns.
+- Whether `agenv` should offer `discard` (reset a dirty clone). Left to `git` for v1.

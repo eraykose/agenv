@@ -8,8 +8,8 @@ Skill descriptions cost tokens in every prompt; MCP schemas load in full for eve
 connected server. Loading every role everywhere defeats the point of roles.
 
 ## Decision
-After `add`, every role except the built-in `agreg` role is disabled at user scope in
-every tool. `agreg use` enables roles per folder (or per user with `--global`), writing
+After `add`, every role except the built-in `agenv` role is disabled at user scope in
+every tool. `agenv use` enables roles per folder (or per user with `--global`), writing
 an explicit on/off for every role so re-running never leaves stale state.
 
 ## Consequences

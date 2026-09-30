@@ -5,7 +5,7 @@ const path = require('path');
 const { execFileSync, execSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
-const BIN = path.join(ROOT, 'bin', 'agreg.js');
+const BIN = path.join(ROOT, 'bin', 'agenv.js');
 
 // One Node script stands in for claude, codex, gemini, and gh. It logs its argv and
 // reproduces the on-disk side effects observed in the real tools (docs/targets.md).
@@ -65,9 +65,9 @@ if (tool === 'gh' && cmd.startsWith('pr create')) console.log('https://github.co
 `;
 
 function makeSandbox() {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'agreg-test-'));
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'agenv-test-'));
   const home = path.join(base, 'home');
-  const agregHome = path.join(home, '.agreg');
+  const agenvHome = path.join(home, '.agenv');
   const shims = path.join(base, 'bin');
   const log = path.join(base, 'calls.log');
   fs.mkdirSync(shims, { recursive: true });
@@ -83,7 +83,7 @@ function makeSandbox() {
   const env = {
     ...process.env,
     HOME: home,
-    AGREG_HOME: agregHome,
+    AGENV_HOME: agenvHome,
     PATH: `${shims}:${process.env.PATH}`,
     GIT_AUTHOR_NAME: 'Test',
     GIT_AUTHOR_EMAIL: 'test@example.com',
@@ -96,7 +96,7 @@ function makeSandbox() {
   const sb = {
     base,
     home,
-    agregHome,
+    agenvHome,
     log,
     env,
     calls: () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n') : []),
@@ -104,7 +104,7 @@ function makeSandbox() {
       try {
         return execFileSync('node', [BIN, ...args], { env, cwd: opts.cwd || base, encoding: 'utf8', input: opts.input, stdio: ['pipe', 'pipe', 'pipe'] });
       } catch (err) {
-        throw new Error(`agreg ${args.join(' ')} exited ${err.status}\n${err.stdout || ''}${err.stderr || ''}`);
+        throw new Error(`agenv ${args.join(' ')} exited ${err.status}\n${err.stdout || ''}${err.stderr || ''}`);
       }
     },
     git: (args, cwd) => execSync(`git ${args}`, { env, cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(),

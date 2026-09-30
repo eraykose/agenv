@@ -11,10 +11,10 @@ repository directly and need the files present.
 
 ## Decision
 The source per role is `plugin.json` (Agent Plugins 1.0) plus optional `mcp.json`.
-`agreg build` writes every adapter deterministically; they are committed; `agreg doctor`
+`agenv build` writes every adapter deterministically; they are committed; `agenv doctor`
 and the registry's CI run `build --check` so drift fails fast.
 
 ## Consequences
 - One place to change metadata or MCP servers.
-- A registry works with vendor tools even without agreg (Cowork, `claude plugin
+- A registry works with vendor tools even without agenv (Cowork, `claude plugin
   marketplace add`).

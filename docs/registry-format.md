@@ -1,7 +1,7 @@
 # Registry format
 
-A registry is a git repository with this shape. `agreg init` scaffolds it; `agreg
-doctor` validates it; `agreg build` regenerates every file marked *generated*.
+A registry is a git repository with this shape. `agenv init` scaffolds it; `agenv
+doctor` validates it; `agenv build` regenerates every file marked *generated*.
 
 ```
 <registry>/
@@ -17,15 +17,15 @@ doctor` validates it; `agreg build` regenerates every file marked *generated*.
 │       └── gemini-extension.json        generated  (Gemini CLI; MCP servers inlined)
 ├── .claude-plugin/marketplace.json      generated  catalogue for Claude Code + Cowork
 ├── .agents/plugins/marketplace.json     generated  catalogue for Codex (its canonical path)
-├── agreg.json                           registry name, description, owner (feeds the catalogues)
+├── agenv.json                           registry name, description, owner (feeds the catalogues)
 ├── README.md
-└── .github/workflows/ci.yml             runs `npx agreg doctor .`
+└── .github/workflows/ci.yml             runs `npx agenv doctor .`
 ```
 
 Rules:
 
 - `plugin.json` `name` must equal the folder name; role names are kebab-case.
-- The registry **name** in `agreg.json` is what Codex uses as the marketplace name, so
+- The registry **name** in `agenv.json` is what Codex uses as the marketplace name, so
   plugin ids are `<role>@<registry>`. It must be unique among the registries a machine
   configures.
 - A role with no skills and no `mcp.json` is flagged by `doctor`.
@@ -33,7 +33,7 @@ Rules:
   skills directly. Hooks in `hooks/hooks.json` are Claude Code's format.
 - Never hand-edit generated files; CI runs `build --check`.
 
-`agreg.json`:
+`agenv.json`:
 
 ```json
 { "name": "ek-skills", "description": "…", "owner": { "name": "…", "email": "…" } }

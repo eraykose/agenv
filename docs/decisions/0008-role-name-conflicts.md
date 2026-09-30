@@ -11,10 +11,10 @@ Gemini, which reads the extension name from the committed `gemini-extension.json
 Changing a link name after the fact would also break existing per-folder settings.
 
 ## Decision
-Tool-visible name = role name. `agreg add` refuses a registry whose role names collide
-with an already configured registry (or with the built-in `agreg` role) and names the
+Tool-visible name = role name. `agenv add` refuses a registry whose role names collide
+with an already configured registry (or with the built-in `agenv` role) and names the
 clash; the fix is to rename the role in one registry. The CLI always accepts the
-qualified form `<registry>/<role>`. `agreg new role` applies the same check when the
+qualified form `<registry>/<role>`. `agenv new role` applies the same check when the
 registry is configured on this machine.
 
 ## Consequences
